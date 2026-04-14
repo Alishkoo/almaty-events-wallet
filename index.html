@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Almaty Events — Connect Wallet</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #080812;
+            color: white;
+            font-family: -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: #1A0A2E;
+            border-radius: 24px;
+            padding: 40px 24px;
+            max-width: 360px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+        .logo { font-size: 48px; margin-bottom: 16px; }
+        h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+        p { color: #9CA3AF; font-size: 14px; margin-bottom: 32px; line-height: 1.5; }
+        .btn {
+            background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            margin-bottom: 12px;
+        }
+        .btn:active { opacity: 0.8; }
+        .status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            display: none;
+        }
+        .status.success { background: rgba(16,185,129,0.2); color: #10B981; }
+        .status.error { background: rgba(239,68,68,0.2); color: #EF4444; }
+        .address {
+            font-family: monospace;
+            font-size: 12px;
+            color: #A78BFA;
+            margin-top: 8px;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo">🏔</div>
+        <h1>Almaty Events</h1>
+        <p>Подключи MetaMask кошелёк чтобы получать NFT награды за посещение событий</p>
+        
+        <button class="btn" onclick="connectWallet()">
+            🦊 Подключить MetaMask
+        </button>
+
+        <div class="status" id="status"></div>
+        <div class="address" id="address"></div>
+    </div>
+
+    <script>
+        const MESSAGE = "Connect to Almaty Events";
+
+        async function connectWallet() {
+            const statusEl = document.getElementById('status');
+            const addressEl = document.getElementById('address');
+
+            if (typeof window.ethereum === 'undefined') {
+                showStatus('MetaMask не найден. Открой эту страницу в браузере MetaMask.', 'error');
+                return;
+            }
+
+            try {
+                showStatus('Подключаемся...', 'success');
+                
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                const address = accounts[0];
+                addressEl.textContent = address;
+
+                showStatus('Подписываем сообщение...', 'success');
+                
+                const signature = await window.ethereum.request({
+                    method: 'personal_sign',
+                    params: [MESSAGE, address]
+                });
+
+                showStatus('Успешно! Возвращаемся в приложение...', 'success');
+
+                setTimeout(() => {
+                    const callbackURL = `vibechain://wallet?address=${address}&signature=${encodeURIComponent(signature)}&message=${encodeURIComponent(MESSAGE)}`;
+                    window.location.href = callbackURL;
+                }, 1000);
+
+            } catch (error) {
+                showStatus('Ошибка: ' + error.message, 'error');
+            }
+        }
+
+        function showStatus(msg, type) {
+            const el = document.getElementById('status');
+            el.textContent = msg;
+            el.className = 'status ' + type;
+            el.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
