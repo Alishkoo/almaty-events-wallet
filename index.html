@@ -41,6 +41,7 @@
             margin-bottom: 12px;
         }
         .btn:active { opacity: 0.8; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .status {
             margin-top: 20px;
             padding: 12px;
@@ -65,7 +66,7 @@
         <h1>Almaty Events</h1>
         <p>Подключи MetaMask кошелёк чтобы получать NFT награды за посещение событий</p>
         
-        <button class="btn" onclick="connectWallet()">
+        <button class="btn" id="connectBtn" onclick="connectWallet()">
             🦊 Подключить MetaMask
         </button>
 
@@ -74,10 +75,8 @@
     </div>
 
     <script>
-        const MESSAGE = "Connect to Almaty Events";
-
         async function connectWallet() {
-            const statusEl = document.getElementById('status');
+            const btn = document.getElementById('connectBtn');
             const addressEl = document.getElementById('address');
 
             if (typeof window.ethereum === 'undefined') {
@@ -85,31 +84,36 @@
                 return;
             }
 
+            btn.disabled = true;
+
             try {
                 showStatus('Подключаемся...', 'success');
-                
-                const accounts = await window.ethereum.request({ 
-                    method: 'eth_requestAccounts' 
+
+                const accounts = await window.ethereum.request({
+                    method: 'eth_requestAccounts'
                 });
                 const address = accounts[0];
                 addressEl.textContent = address;
 
                 showStatus('Подписываем сообщение...', 'success');
-                
+
+                const message = `Connect to Exala\nAddress: ${address}`;
+
                 const signature = await window.ethereum.request({
                     method: 'personal_sign',
-                    params: [MESSAGE, address]
+                    params: [message, address]
                 });
 
-                showStatus('Успешно! Возвращаемся в приложение...', 'success');
+                showStatus(' Успешно! Возвращаемся в приложение...', 'success');
 
                 setTimeout(() => {
-                    const callbackURL = `vibechain://wallet?address=${address}&signature=${encodeURIComponent(signature)}&message=${encodeURIComponent(MESSAGE)}`;
+                    const callbackURL = `vibechain://wallet?address=${encodeURIComponent(address)}&signature=${encodeURIComponent(signature)}&message=${encodeURIComponent(message)}`;
                     window.location.href = callbackURL;
                 }, 1000);
 
             } catch (error) {
                 showStatus('Ошибка: ' + error.message, 'error');
+                btn.disabled = false;
             }
         }
 
